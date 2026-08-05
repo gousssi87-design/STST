@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>이상현상 처리국 - 관제 터미널</title>
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -31,7 +31,7 @@
 
     <!-- 대화/선택지 -->
     <div class="box comm-area">
-      <div id="voice-log" class="voice-log"A-0924 음성신호를 수신 중...</div>
+      <div id="voice-log" class="voice-log">A-0924 음성신호를 수신 중...</div>
       <div id="choices-panel" class="choices-container"></div>
     </div>
   </div>
@@ -48,46 +48,50 @@
     <div id="anomaly-details" style="margin-top: 8px; line-height: 1.4;">불러오는 중...</div>
   </div>
 
-  <!-- 데이터 연동 스크립트 -->
+  <!-- 내장 데이터 및 게임 스크립트 -->
   <script>
-    let currentScenario = null; // 선택된 시나리오 저장용
+    // JSON 데이터를 코드 내부에 직접 정의 (CORS 에러 원천 차단)
+    const anomalyData = [
+      {
+        "name": "거미다리",
+        "dangerLevel": "Class 3",
+        "symptom": "어둡고 습한 구역에서 관절음이 들리며, 두부 시선 접촉 시 정신 오염도 급증",
+        "scenarios": [
+          {
+            "voiceLog": "천장에 있는 데요?",
+            "correctAction": "시선을 바닥으로 고정하고 후퇴 지령 내리기",
+            "wrongActions": [
+              "손전등을 비추어 정체를 확인하기",
+              "이름을 크게 불러 반응 유도하기"
+            ],
+            "successMessage": "안전하게 시선을 차단하고 구역을 이탈했습니다.",
+            "failureMessage": "개체와 시선이 접촉하여 정신 오염도가 급증했습니다!"
+          }
+        ]
+      }
+    ];
 
-    // json 파일 불러오기
-    fetch('anomalies.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        // 개체 무작위 선택
-        const randomAnomaly = data[Math.floor(Math.random() * data.length)];
+    let currentScenario = null;
 
-        // 해당 개체의 여러 시나리오 중 1개 무작위 선택
-        const randomScenario = randomAnomaly.scenarios[Math.floor(Math.random() * randomAnomaly.scenarios.length)];
-        
-        currentScenario = randomScenario;
-        
-        setupGame(randomAnomaly, randomScenario);
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById('log-text').innerText = "불러오는 중";
-      });
+    // 게임 초기화 실행
+    function initGame() {
+      const data = anomalyData;
+      const randomAnomaly = data[Math.floor(Math.random() * data.length)];
+      const randomScenario = randomAnomaly.scenarios[Math.floor(Math.random() * randomAnomaly.scenarios.length)];
+      
+      currentScenario = randomScenario;
+      setupGame(randomAnomaly, randomScenario);
+    }
 
     // 화면 데이터 세팅 및 선택지 무작위 배치
     function setupGame(anomaly, scenario) {
-      // 1. 이상현상 일람 표시
       document.getElementById('anomaly-details').innerHTML = `
         <strong>개체명:</strong> ${anomaly.name} (${anomaly.dangerLevel})<br>
         <strong>증상:</strong> ${anomaly.symptom}
       `;
 
-      // 2. 시나리오별 개별 음성 로그 출력
       document.getElementById('voice-log').innerText = `"[박성호] ${scenario.voiceLog}"`;
 
-      // 3. 선택한 시나리오의 정답 1개 + 오답 배열 생성 후 무작위 섞기
       let options = [
         { text: scenario.correctAction, isCorrect: true },
         { text: scenario.wrongActions[0], isCorrect: false },
@@ -95,7 +99,6 @@
       ];
       options.sort(() => Math.random() - 0.5);
 
-      // 4. 선택지 버튼 화면에 그리기
       const choicesPanel = document.getElementById('choices-panel');
       choicesPanel.innerHTML = '';
       
@@ -125,6 +128,9 @@
         if (mentalBar) mentalBar.style.width = "68%";
       }
     }
+
+    // 실행
+    initGame();
   </script>
 </body>
 </html>
